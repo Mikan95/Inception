@@ -17,10 +17,10 @@ GOLD	=	"\033[38;5;220m"
 
 NAME					= Inception
 DOCKER_COMPOSE_FILE		= srcs/docker-compose.yml
-# DOCKER_COMPOSE_COMMAND	= docker compose -f
+DOCKER_COMPOSE_COMMAND	= docker compose -f $(DOCKER_COMPOSE_FILE)
 
 
-BUILD			= docker compose -f $(DOCKER_COMPOSE_FILE) build
+BUILD			= $(DOCKER_COMPOSE_COMMAND) build
 FORCE_REBUILD	= $(BUILD) --no-cache
 
 
@@ -41,13 +41,13 @@ rebuild:
 # Start containers in detached mode (keep running in background)
 up:
 	@echo $(YELLOW) "Starting containers in detached mode" $(RES)
-	docker compose up --detach
+	$(DOCKER_COMPOSE_COMMAND) up --detach
 
 # Stop containers
 down:
 	@echo $(RED) "Removing and shutting down containers" $(RES)
 
-	@docker compose down
+	@$(DOCKER_COMPOSE_COMMAND) down
 
 	@echo $(GREEN) "Containers successfully shut down and removed" $(RES)
 
@@ -56,27 +56,34 @@ clean:
 	@echo $(RED) "Removing Containers and Volumes" $(RES)
 	@echo $(ORANGE " WARNING: this will erase all data in MariaDB!")
 
-	@docker compose down -v
+	@$(DOCKER_COMPOSE_COMMAND) down -v
 
 	@echo $(GREEN) "Containers and Volumes successfully removed" $(RES)
 
 
-# Target: Remove images too
+# Remove images
 fclean: clean
 	@echo $(RED) "Removing images.." $(RES)
 
-	@docker compose down -rmi
+	@$(DOCKER_COMPOSE_COMMAND) down -rmi
+
+	@echo $(GREEN) "Images successfully removed" $(RES)
+
+
+
 
 # Target: Full rebuild
 re: fclean all
 
-# Target: Show logs
+
+# Show volumes
 volumes:
-	docker compose volumes --format table
+	$(DOCKER_COMPOSE_COMMAND) volumes --format table
+
 
 # Target: Show running containers
 ps:
-	docker compose ps --format table
+	$(DOCKER_COMPOSE_COMMAND) ps --format table
 
 # Declare phony targets (not actual files)
 .PHONY: all build up down clean fclean re logs ps
