@@ -46,6 +46,18 @@ up:
 
 	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
 
+setup:
+# '-' is used to tell Makefile to ignore errors for this rule
+
+	@while true; do \
+		read -p "Please define root password: " pwd; \
+		if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+			echo "congratulations your pw is: " $$pwd; \
+			break; \
+		else \
+			echo "Password must be between 4 and 20 characters!"; \
+		fi; \
+	done; \
 
 # Stop containers
 down:
@@ -91,5 +103,5 @@ ps:
 
 
 
-.PHONY: all build up down clean fclean re volumes ps
+.PHONY: all build up down clean fclean re volumes ps setup
 
