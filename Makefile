@@ -41,7 +41,11 @@ rebuild:
 # Start containers in detached mode (keep running in background)
 up:
 	@echo $(YELLOW) "Starting containers in detached mode" $(RES)
-	$(DOCKER_COMPOSE_COMMAND) up --detach
+
+	$(DOCKER_COMPOSE_COMMAND) up -d
+
+	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
+
 
 # Stop containers
 down:
@@ -85,6 +89,7 @@ volumes:
 ps:
 	$(DOCKER_COMPOSE_COMMAND) ps --format table
 
-# Declare phony targets (not actual files)
-.PHONY: all build up down clean fclean re logs ps
+
+
+.PHONY: all build up down clean fclean re volumes ps
 

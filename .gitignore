@@ -1,2 +1,11 @@
 docs/
 secrets/
+/home/ameechan/data
+
+.DS_Store
+
+*.swp
+*.swo
+*~
+
+*.log
