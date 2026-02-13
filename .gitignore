@@ -2,6 +2,8 @@ docs/
 secrets/
 /home/ameechan/data
 
+srcs/.env
+
 .DS_Store
 
 *.swp
