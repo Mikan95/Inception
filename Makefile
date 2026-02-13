@@ -40,9 +40,10 @@ rebuild:
 
 # Start containers in detached mode (keep running in background)
 up:
+# need to make sure that mariadb(1) then wordpress(2) then nginx(3) is done in that order.
 	@echo $(YELLOW) "Starting containers in detached mode" $(RES)
 
-	$(DOCKER_COMPOSE_COMMAND) up -d
+	$(DOCKER_COMPOSE_COMMAND) up -d --build --pull never mariadb
 
 	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
 
