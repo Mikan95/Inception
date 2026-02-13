@@ -21,11 +21,7 @@ DOCKER_COMPOSE_COMMAND	= docker compose -f $(DOCKER_COMPOSE_FILE)
 BUILD					= $(DOCKER_COMPOSE_COMMAND) build
 FORCE_REBUILD			= $(BUILD) --no-cache
 
-# SECRETS_PATH	= secrets/
-S_DB_ROOT		= secrets/db_root_password.txt
-S_DB			= secrets/db_password.txt
-S_CREDENTIALS	= secrets/credentials.txt
-SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
+
 
 
 
@@ -51,61 +47,75 @@ up:
 
 	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
 
+#
+
+
+
+
+
+# SECRETS_PATH	= secrets/
+S_DB_ROOT		= secrets/db_root_password.txt
+S_DB			= secrets/db_password.txt
+S_CREDENTIALS	= secrets/credentials.txt
+SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
+
 setup:
-
-	@echo $(CYAN)"Setting up environment files.."$(RES)
-	@if [ ! -f srcs/.env]; then \
+	@echo $(CYAN)"Setting up environment files.."$(RES); \
+\
+	if [ ! -f srcs/.env ]; then \
 		cp srcs/.env.example srcs/.env; \
-		echo $(GREEN)"✓ Created srcs/.env from template"; \
-		echo $(ORANGE) "⚠ Please edit srcs/.env with your values before starting!"
+		echo $(GREEN)"✓ Created srcs/.env from template"$(RES); \
+		echo $(ORANGE)"⚠ Please edit srcs/.env with your values before starting!"$(RES); \
 	else \
-		echo "✓ srcs/.env already exists"
-
-
-# Get MariaDB Root password and store in $(S_DB_ROOT)
-	@if [ ! -f $(S_DB_ROOT) ]; then \
-		while true; do \
-			read -p "Please define MariaDB Root password: " pwd; \
-			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
-				echo "$$pwd" > $(S_DB_ROOT); \
-				echo $(GREEN)"Password Confirmed!" $(RES); \
+		echo "✓ srcs/.env already exists"; \
+	fi; \
+\
+\
+	ask_password() { \
+		file=$$1; \
+		prompt=$$2; \
+		if [ ! -f $$file ]; then \
+			while true; do \
+				read -p "$$prompt" pwd; \
+				if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+					echo "$$pwd" > $$file; \
+					echo $(GREEN)"Password confirmed!\n"$(RES); \
+					break; \
+				else \
+					echo "Password must be between 4 and 20 characters!\n"; \
+				fi; \
+			done; \
+		fi; \
+	}; \
+\
+\
+	ask_credentials() { \
+		file=$$1; \
+		if [ ! -f $$file ]; then \
+			while true; do \
+				read -p "Enter WordPress username: " user; \
+				if [ -z "$$user" ]; then \
+					echo "Username cannot be empty!\n"; \
+					continue; \
+				fi; \
+				read -p "Enter WordPress password: " pwd; \
+				if [ $${#pwd} -lt 4 ] || [ $${#pwd} -gt 20 ]; then \
+					echo "Password must be between 4 and 20 characters!\n"; \
+					continue; \
+				fi; \
+				echo "$$user:$$pwd" > $$file; \
+				echo $(GREEN)"Credentials saved!\n"$(RES); \
 				break; \
-			else \
-				echo "Password must be between 4 and 20 characters!"; \
-			fi; \
-		done; \
-	fi;
-
-# Get WordPress Database user password and store in $(S_DB)
-	@if [ ! -f $(S_DB) ]; then \
-		while true; do \
-			read -p "Please define WordPress database User password: " pwd; \
-			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
-				echo "$$pwd" > $(S_DB); \
-				echo $(GREEN)"Password Confirmed!" $(RES); \
-				break; \
-			else \
-				echo "Password must be between 4 and 20 characters!"; \
-			fi; \
-		done; \
-	fi;
+			done; \
+		fi; \
+	}; \
+\
+	ask_password $(S_DB_ROOT) "Please define MariaDB Root password: "; \
+	ask_password $(S_DB) "Please define WordPress DB user password: "; \
+	ask_credentials $(S_CREDENTIALS);
 
 
-# Get Credentials password and store in $(S_CREDENTIALS)
-	@if [ ! -f $(S_CREDENTIALS) ]; then \
-		while true; do \
-			read -p "Please define WordPress admin password: " pwd; \
-			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
-				echo "$$pwd" > $(S_CREDENTIALS); \
-				echo $(GREEN)"Password Confirmed!" $(RES); \
-			else \
-				echo "Password must be between 4 and 20 characters!"; \
-				continue; \
-			fi; \
 
-			read -p "Please define WordPress admin password: "
-		done; \
-	fi;
 
 # Stop containers
 down:
@@ -117,21 +127,24 @@ down:
 
 # Stop and remove everything (containers, volumes, networks)
 clean:
-	@echo $(RED) "Removing Containers and Volumes" $(RES)
-	@echo $(ORANGE " WARNING: this will erase all data in MariaDB!")
+# 	@echo $(RED) "Removing Containers and Volumes" $(RES)
+# 	@echo $(ORANGE " WARNING: this will erase all data in MariaDB!")
 
-	@$(DOCKER_COMPOSE_COMMAND) down -v
-	rm -rf $(S_DB_ROOT)
-	@echo $(GREEN) "Containers and Volumes successfully removed" $(RES)
+# 	@$(DOCKER_COMPOSE_COMMAND) down -v
+# 	@echo $(GREEN) "Containers and Volumes successfully removed" $(RES)
+
+	@rm -rf $(SECRET_FILES)
+	@rm -rf srcs/.env
+	@echo $(CYAN) "Cleaned secrets and srcs/.env" $(RES)
 
 
 # Remove images
 fclean: clean
-	@echo $(RED) "Removing images.." $(RES)
+# 	@echo $(RED) "Removing images.." $(RES)
 
-	@$(DOCKER_COMPOSE_COMMAND) down -rmi
+# 	@$(DOCKER_COMPOSE_COMMAND) down -rmi
 
-	@echo $(GREEN) "Images successfully removed" $(RES)
+# 	@echo $(GREEN) "Images successfully removed" $(RES)
 
 
 

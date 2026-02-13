@@ -1,13 +1,23 @@
+
+# Personal Files
 docs/
-secrets/
 /home/ameechan/data
 
+
+# Secret Files
+secrets/credentials.txt
+secrets/db_password.txt
+secrets/db_root_password.txt
+
+
+# Env Files
 srcs/.env
+srcs/.env.testing
 
+
+# Other
 .DS_Store
-
 *.swp
 *.swo
 *~
-
 *.log
