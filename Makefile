@@ -14,19 +14,23 @@ PURPLE	=	"\033[38;5;129m"
 GOLD	=	"\033[38;5;220m"
 
 
-
+# DOCKER
 NAME					= Inception
 DOCKER_COMPOSE_FILE		= srcs/docker-compose.yml
 DOCKER_COMPOSE_COMMAND	= docker compose -f $(DOCKER_COMPOSE_FILE)
+BUILD					= $(DOCKER_COMPOSE_COMMAND) build
+FORCE_REBUILD			= $(BUILD) --no-cache
 
-
-BUILD			= $(DOCKER_COMPOSE_COMMAND) build
-FORCE_REBUILD	= $(BUILD) --no-cache
+# SECRETS_PATH	= secrets/
+S_DB_ROOT		= secrets/db_root_password.txt
+S_DB			= secrets/db_password.txt
+S_CREDENTIALS	= secrets/credentials.txt
+SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
 
 
 
 # Build all images
-all:
+all: setup
 	@echo $(GOLD) "Building Docker Images" $(RES)
 	@$(BUILD)
 	@echo $(GREEN) "Build Successful!" $(RES)
@@ -48,17 +52,60 @@ up:
 	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
 
 setup:
-# '-' is used to tell Makefile to ignore errors for this rule
 
-	@while true; do \
-		read -p "Please define root password: " pwd; \
-		if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
-			echo "congratulations your pw is: " $$pwd; \
-			break; \
-		else \
-			echo "Password must be between 4 and 20 characters!"; \
-		fi; \
-	done; \
+	@echo $(CYAN)"Setting up environment files.."$(RES)
+	@if [ ! -f srcs/.env]; then \
+		cp srcs/.env.example srcs/.env; \
+		echo $(GREEN)"✓ Created srcs/.env from template"; \
+		echo $(ORANGE) "⚠ Please edit srcs/.env with your values before starting!"
+	else \
+		echo "✓ srcs/.env already exists"
+
+
+# Get MariaDB Root password and store in $(S_DB_ROOT)
+	@if [ ! -f $(S_DB_ROOT) ]; then \
+		while true; do \
+			read -p "Please define MariaDB Root password: " pwd; \
+			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+				echo "$$pwd" > $(S_DB_ROOT); \
+				echo $(GREEN)"Password Confirmed!" $(RES); \
+				break; \
+			else \
+				echo "Password must be between 4 and 20 characters!"; \
+			fi; \
+		done; \
+	fi;
+
+# Get WordPress Database user password and store in $(S_DB)
+	@if [ ! -f $(S_DB) ]; then \
+		while true; do \
+			read -p "Please define WordPress database User password: " pwd; \
+			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+				echo "$$pwd" > $(S_DB); \
+				echo $(GREEN)"Password Confirmed!" $(RES); \
+				break; \
+			else \
+				echo "Password must be between 4 and 20 characters!"; \
+			fi; \
+		done; \
+	fi;
+
+
+# Get Credentials password and store in $(S_CREDENTIALS)
+	@if [ ! -f $(S_CREDENTIALS) ]; then \
+		while true; do \
+			read -p "Please define WordPress admin password: " pwd; \
+			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+				echo "$$pwd" > $(S_CREDENTIALS); \
+				echo $(GREEN)"Password Confirmed!" $(RES); \
+			else \
+				echo "Password must be between 4 and 20 characters!"; \
+				continue; \
+			fi; \
+
+			read -p "Please define WordPress admin password: "
+		done; \
+	fi;
 
 # Stop containers
 down:
@@ -74,7 +121,7 @@ clean:
 	@echo $(ORANGE " WARNING: this will erase all data in MariaDB!")
 
 	@$(DOCKER_COMPOSE_COMMAND) down -v
-
+	rm -rf $(S_DB_ROOT)
 	@echo $(GREEN) "Containers and Volumes successfully removed" $(RES)
 
 
