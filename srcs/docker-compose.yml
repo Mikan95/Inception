@@ -1,0 +1,1 @@
+# need to make sure that mariadb(1) then wordpress(2) then nginx(3) is done in that order.

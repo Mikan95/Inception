@@ -38,12 +38,13 @@ rebuild:
 	@echo $(GREEN) "Total Rebuild Successful!" $(RES)
 
 
+
 # Start containers in detached mode (keep running in background)
 up:
-# need to make sure that mariadb(1) then wordpress(2) then nginx(3) is done in that order.
 	@echo $(YELLOW) "Starting containers in detached mode" $(RES)
 
-	$(DOCKER_COMPOSE_COMMAND) up -d --build --pull never mariadb
+# Docker compose handles dependencies in .yaml file
+	@$(DOCKER_COMPOSE_COMMAND) up -d --build
 
 	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
 
@@ -136,13 +137,14 @@ clean:
 	@rm -rf $(SECRET_FILES)
 	@rm -rf srcs/.env
 	@echo $(CYAN) "Cleaned secrets and srcs/.env" $(RES)
+# 	@echo $(GREEN) "Cleaned evrything" $(RES)
 
 
 # Remove images
 fclean: clean
 # 	@echo $(RED) "Removing images.." $(RES)
 
-# 	@$(DOCKER_COMPOSE_COMMAND) down -rmi
+# 	@$(DOCKER_COMPOSE_COMMAND) down --rmi all -v
 
 # 	@echo $(GREEN) "Images successfully removed" $(RES)
 
