@@ -1,1 +1,58 @@
 # need to make sure that mariadb(1) then wordpress(2) then nginx(3) is done in that order.
+
+#########################################
+#		            SERVICES    		        #
+#########################################
+services:
+  mariadb:
+    build:
+      context: ./requirements/mariadb/
+      dockerfile: Dockerfile
+    container_name: mariadb
+    image: mariadb
+    networks:
+      -  db-wp
+    volumes:
+      - type: volume
+        source: mariadb-data
+        target: /var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=secrets:/run/secrets/db_root_pw
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD_FILE=secrets:/run/secrets/db_user_pw
+    secrets:
+      - db_root_pw
+      - db_user_pw
+    restart: unless-stopped
+
+
+#########################################
+#              VOLUMES                  #
+#########################################
+volumes:
+  mariadb-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ameechan/data/mariadb
+
+
+#########################################
+#              NETWORKS                 #
+#########################################
+networks:
+  db-wp:
+    driver: bridge
+
+
+#########################################
+#              SECRETS                  #
+#########################################
+secrets:
+  db_root_pw:
+    file: ../secrets/db_root_password.txt
+
+  db_user_pw:
+    file: ../secrets/db_password.txt
