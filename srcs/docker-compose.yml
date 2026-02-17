@@ -13,14 +13,12 @@ services:
     networks:
       -  db-wp
     volumes:
-      - type: volume
-        source: mariadb-data
-        target: /var/lib/mysql
+      - mariadb-data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD_FILE=secrets:/run/secrets/db_root_pw
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD_FILE=secrets:/run/secrets/db_user_pw
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_pw
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_user_pw
     secrets:
       - db_root_pw
       - db_user_pw

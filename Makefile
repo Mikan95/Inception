@@ -14,12 +14,33 @@ PURPLE	=	"\033[38;5;129m"
 GOLD	=	"\033[38;5;220m"
 
 
+# Defaults
+LOGIN		?= ameechan
+
+# host bind-directories
+DB_DIR := /home/$(LOGIN)/data/mariadb
+WP_DIR := /home/$(LOGIN)/data/wordpress
+
+
 # DOCKER
 NAME					= Inception
 DOCKER_COMPOSE_FILE		= srcs/docker-compose.yml
 DOCKER_COMPOSE_COMMAND	= docker compose -f $(DOCKER_COMPOSE_FILE)
 BUILD					= $(DOCKER_COMPOSE_COMMAND) build
 FORCE_REBUILD			= $(BUILD) --no-cache
+
+
+
+
+# Helper Fucntions
+
+define ensure_directories
+	@mkdir -p $(DB_DIR)
+	@mkdir -p $(WP_DIR)
+	@echo $(GREEN) "Data Directories ensured!" $(RES)
+endef
+
+
 
 
 
@@ -58,9 +79,10 @@ up:
 S_DB_ROOT		= secrets/db_root_password.txt
 S_DB			= secrets/db_password.txt
 S_CREDENTIALS	= secrets/credentials.txt
-SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
+SECRET_FILES	= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
 
 setup:
+	$(ensure_directories)
 	@echo $(CYAN)"Setting up environment files.."$(RES); \
 \
 	if [ ! -f srcs/.env ]; then \
@@ -137,16 +159,16 @@ clean:
 	@rm -rf $(SECRET_FILES)
 	@rm -rf srcs/.env
 	@echo $(CYAN) "Cleaned secrets and srcs/.env" $(RES)
-# 	@echo $(GREEN) "Cleaned evrything" $(RES)
 
 
 # Remove images
-fclean: clean
-# 	@echo $(RED) "Removing images.." $(RES)
+fclean:
+	@echo $(RED) "Removing images and data.." $(RES)
 
-# 	@$(DOCKER_COMPOSE_COMMAND) down --rmi all -v
-
-# 	@echo $(GREEN) "Images successfully removed" $(RES)
+	@$(DOCKER_COMPOSE_COMMAND) down --rmi all -v
+	@sudo rm -rf $(DB_DIR) $(WP_DIR)
+	@$(MAKE) clean
+	@echo $(GREEN) "Images and data successfully removed" $(RES)
 
 
 
