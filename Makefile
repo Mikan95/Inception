@@ -1,192 +1,168 @@
-# COLOURS
-RES		=	"\033[0m"
-BLACK	=	"\033[30m"
-RED		=	"\033[91m"
-GREEN	=	"\033[92m"
-YELLOW	=	"\033[93m"
-BLUE	=	"\033[38;2;0;0;255m"
-MAGENTA	=	"\033[95m"
-CYAN	=	"\033[96m"
-WHITE	=	"\033[97m"
-ORANGE	=	"\033[38;5;208m"
-LIME	=	"\033[38;5;154m"
-PURPLE	=	"\033[38;5;129m"
-GOLD	=	"\033[38;5;220m"
+# ══════════════════════════════════════════════════════
+#                       COLOURS
+# ══════════════════════════════════════════════════════
+RES		= "\033[0m"
+RED		= "\033[91m"
+GREEN	= "\033[92m"
+YELLOW	= "\033[93m"
+ORANGE	= "\033[38;5;208m"
+CYAN	= "\033[96m"
+GOLD	= "\033[38;5;220m"
 
+# ══════════════════════════════════════════════════════
+#                      VARIABLES
+# ══════════════════════════════════════════════════════
+LOGIN				?= ameechan
+DB_DIR				:= /home/$(LOGIN)/data/mariadb
+WP_DIR				:= /home/$(LOGIN)/data/wordpress
 
-# Defaults
-LOGIN		?= ameechan
+NAME				= Inception
+DOCKER_COMPOSE_FILE	= srcs/docker-compose.yml
+DC					= docker compose -f $(DOCKER_COMPOSE_FILE)
 
-# host bind-directories
-DB_DIR := /home/$(LOGIN)/data/mariadb
-WP_DIR := /home/$(LOGIN)/data/wordpress
+S_DB_ROOT			= secrets/db_root_password.txt
+S_DB				= secrets/db_password.txt
+S_CREDENTIALS		= secrets/credentials.txt
+SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
 
-
-# DOCKER
-NAME					= Inception
-DOCKER_COMPOSE_FILE		= srcs/docker-compose.yml
-DOCKER_COMPOSE_COMMAND	= docker compose -f $(DOCKER_COMPOSE_FILE)
-BUILD					= $(DOCKER_COMPOSE_COMMAND) build
-FORCE_REBUILD			= $(BUILD) --no-cache
-
-
-
-
-# Helper Fucntions
-
+# ══════════════════════════════════════════════════════
+#                   HELPER MACROS
+# ══════════════════════════════════════════════════════
 define ensure_directories
 	@mkdir -p $(DB_DIR)
 	@mkdir -p $(WP_DIR)
-	@echo $(GREEN) "Data Directories ensured!" $(RES)
+	@echo $(GREEN)"Data directories ensured!"$(RES)
 endef
 
-
-
-
-
-
-
-# Build all images
-all: setup
-	@echo $(GOLD) "Building Docker Images" $(RES)
-	@$(BUILD)
-	@echo $(GREEN) "Build Successful!" $(RES)
-
-# Rebuild all docker images from scratch (without cache)
-rebuild:
-	@echo $(ORANGE) "REBUILDING FROM ZERO" $(RES)
-	@$(FORCE_REBUILD)
-	@echo $(GREEN) "Total Rebuild Successful!" $(RES)
-
-
-
-# Start containers in detached mode (keep running in background)
-up:
-	@echo $(YELLOW) "Starting containers in detached mode" $(RES)
-
-# Docker compose handles dependencies in .yaml file
-	@$(DOCKER_COMPOSE_COMMAND) up -d --build
-
-	@echo $(GREEN) "Containers successfully started in detached mode" $(RES)
-
-#
-
-
-
-
-
-# SECRETS_PATH	= secrets/
-S_DB_ROOT		= secrets/db_root_password.txt
-S_DB			= secrets/db_password.txt
-S_CREDENTIALS	= secrets/credentials.txt
-SECRET_FILES	= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
-
-setup:
-	$(ensure_directories)
-	@echo $(CYAN)"Setting up environment files.."$(RES); \
-\
-	if [ ! -f srcs/.env ]; then \
-		cp srcs/.env.example srcs/.env; \
-		echo $(GREEN)"✓ Created srcs/.env from template"$(RES); \
-		echo $(ORANGE)"⚠ Please edit srcs/.env with your values before starting!"$(RES); \
-	else \
-		echo "✓ srcs/.env already exists"; \
-	fi; \
-\
-\
-	ask_password() { \
-		file=$$1; \
-		prompt=$$2; \
-		if [ ! -f $$file ]; then \
-			while true; do \
-				read -p "$$prompt" pwd; \
-				if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
-					echo "$$pwd" > $$file; \
-					echo $(GREEN)"Password confirmed!\n"$(RES); \
-					break; \
-				else \
-					echo "Password must be between 4 and 20 characters!\n"; \
-				fi; \
-			done; \
-		fi; \
-	}; \
-\
-\
-	ask_credentials() { \
-		file=$$1; \
-		if [ ! -f $$file ]; then \
-			while true; do \
-				read -p "Enter WordPress username: " user; \
-				if [ -z "$$user" ]; then \
-					echo "Username cannot be empty!\n"; \
-					continue; \
-				fi; \
-				read -p "Enter WordPress password: " pwd; \
-				if [ $${#pwd} -lt 4 ] || [ $${#pwd} -gt 20 ]; then \
-					echo "Password must be between 4 and 20 characters!\n"; \
-					continue; \
-				fi; \
-				echo "$$user:$$pwd" > $$file; \
-				echo $(GREEN)"Credentials saved!\n"$(RES); \
+# Usage: $(call ask_password,path_to_file,prompt_string)
+define ask_password
+	@if [ ! -f $(1) ]; then \
+		while true; do \
+			read -p "$(2)" pwd; \
+			if [ $${#pwd} -ge 4 ] && [ $${#pwd} -le 20 ]; then \
+				echo "$$pwd" > $(1); \
+				chmod 600 $(1); \
+				printf $(GREEN)"✓ Password saved!\n"$(RES); \
 				break; \
-			done; \
-		fi; \
-	}; \
-\
-	ask_password $(S_DB_ROOT) "Please define MariaDB Root password: "; \
-	ask_password $(S_DB) "Please define WordPress DB user password: "; \
-	ask_credentials $(S_CREDENTIALS);
+			else \
+				printf "Password must be 4-20 characters!\n"; \
+			fi; \
+		done; \
+	else \
+		printf "✓ $(1) already exists, skipping.\n"; \
+	fi
+endef
 
+# Usage: $(call ask_credentials,path_to_file)
+define ask_credentials
+	@if [ ! -f $(1) ]; then \
+		while true; do \
+			read -p "Enter WordPress admin username: " user; \
+			if [ -z "$$user" ]; then \
+				printf "Username cannot be empty!\n"; continue; \
+			fi; \
+			read -p "Enter WordPress admin password: " pwd; \
+			if [ $${#pwd} -lt 4 ] || [ $${#pwd} -gt 20 ]; then \
+				printf "Password must be 4-20 characters!\n"; continue; \
+			fi; \
+			echo "$$user:$$pwd" > $(1); \
+			chmod 600 $(1); \
+			printf $(GREEN)"✓ Credentials saved!\n"$(RES); \
+			break; \
+		done; \
+	else \
+		printf "✓ $(1) already exists, skipping.\n"; \
+	fi
+endef
 
+# ══════════════════════════════════════════════════════
+#                   MAIN TARGETS
+# ══════════════════════════════════════════════════════
 
+# Build all images (runs setup first to ensure secrets/dirs exist)
+all: setup
+	@echo $(GOLD)"Building Docker Images..."$(RES)
+	@$(DC) build
+	@echo $(GREEN)"Build Successful!"$(RES)
 
-# Stop containers
+# Start containers in detached mode
+up:
+	@echo $(YELLOW)"Starting containers..."$(RES)
+	@$(DC) up -d
+	@echo $(GREEN)"Containers started!"$(RES)
+
+# Start containers in detached mode
+up-build:
+	@echo $(YELLOW)"Starting containers..."$(RES)
+	@$(DC) up -d --build
+	@echo $(GREEN)"Containers started!"$(RES)
+
+# Stop containers (keeps volumes and images)
 down:
-	@echo $(RED) "Removing and shutting down containers" $(RES)
+	@echo $(RED)"Stopping containers..."$(RES)
+	@$(DC) down
+	@echo $(GREEN)"Containers stopped!"$(RES)
 
-	@$(DOCKER_COMPOSE_COMMAND) down
+# Full rebuild from scratch (no cache)
+rebuild:
+	@echo $(ORANGE)"Rebuilding from zero (no cache)..."$(RES)
+	@$(DC) build --no-cache
+	@echo $(GREEN)"Rebuild Successful!"$(RES)
 
-	@echo $(GREEN) "Containers successfully shut down and removed" $(RES)
+# ══════════════════════════════════════════════════════
+#                  CLEANUP TARGETS
+# ══════════════════════════════════════════════════════
 
-# Stop and remove everything (containers, volumes, networks)
+# Remove secrets and .env only (keeps containers/images/volumes)
 clean:
-# 	@echo $(RED) "Removing Containers and Volumes" $(RES)
-# 	@echo $(ORANGE " WARNING: this will erase all data in MariaDB!")
-
-# 	@$(DOCKER_COMPOSE_COMMAND) down -v
-# 	@echo $(GREEN) "Containers and Volumes successfully removed" $(RES)
-
+	@echo $(ORANGE)"Cleaning secrets and environment..."$(RES)
 	@rm -rf $(SECRET_FILES)
 	@rm -rf srcs/.env
-	@echo $(CYAN) "Cleaned secrets and srcs/.env" $(RES)
+	@echo $(CYAN)"Secrets and .env removed!"$(RES)
 
-
-# Remove images
+# Remove EVERYTHING: containers, images, volumes, data, secrets
+# Order matters! Docker must read .env BEFORE we delete it
 fclean:
-	@echo $(RED) "Removing images and data.." $(RES)
-
-	@$(DOCKER_COMPOSE_COMMAND) down --rmi all -v
+	@echo $(RED)"Removing everything..."$(RES)
+	@$(DC) down --rmi all -v 2>/dev/null || true
 	@sudo rm -rf $(DB_DIR) $(WP_DIR)
-	@$(MAKE) clean
-	@echo $(GREEN) "Images and data successfully removed" $(RES)
+	@$(MAKE) --no-print-directory clean
+	@echo $(GREEN)"Everything removed!"$(RES)
 
-
-
-
-# Target: Full rebuild
+# Full clean then rebuild
 re: fclean all
 
+# ══════════════════════════════════════════════════════
+#                  UTILITY TARGETS
+# ══════════════════════════════════════════════════════
+
+# Show running containers
+ps:
+	@$(DC) ps --format table
+
+# Show logs (optionally: make logs s=mariadb to filter by service)
+logs:
+	@$(DC) logs -f $(s)
 
 # Show volumes
 volumes:
-	$(DOCKER_COMPOSE_COMMAND) volumes --format table
+	@$(DC) ls
 
+# ══════════════════════════════════════════════════════
+#                     SETUP TARGET
+# ══════════════════════════════════════════════════════
+setup:
+	$(ensure_directories)
+	@echo $(CYAN)"Setting up environment files..."$(RES); \
+	if [ ! -f srcs/.env ]; then \
+		cp srcs/.env.example srcs/.env; \
+		printf $(GREEN)"✓ Created srcs/.env from template"$(RES); \
+		printf $(ORANGE)"⚠ Please edit srcs/.env before starting!"$(RES); \
+	else \
+		echo "✓ srcs/.env already exists"; \
+	fi;
+	$(call ask_password,$(S_DB_ROOT),Please define MariaDB root password: )
+	$(call ask_password,$(S_DB),Please define WordPress DB user password: )
+# 	$(call ask_credentials,$(S_CREDENTIALS))
 
-# Target: Show running containers
-ps:
-	$(DOCKER_COMPOSE_COMMAND) ps --format table
-
-
-
-.PHONY: all build up down clean fclean re volumes ps setup
-
+.PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup
