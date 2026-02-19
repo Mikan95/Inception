@@ -31,7 +31,7 @@ SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
 define ensure_directories
 	@mkdir -p $(DB_DIR)
 	@mkdir -p $(WP_DIR)
-	@echo $(GREEN)"Data directories ensured!"$(RES)
+	@echo $(GREEN)"✓ Data directories ensured!"$(RES)
 endef
 
 # Usage: $(call ask_password,path_to_file,prompt_string)
@@ -49,7 +49,7 @@ define ask_password
 			fi; \
 		done; \
 	else \
-		printf "✓ $(1) already exists, skipping.\n"; \
+		echo $(GREEN)"✓ $(1) already exists, skipping."$(RES); \
 	fi
 endef
 
@@ -71,7 +71,7 @@ define ask_credentials
 			break; \
 		done; \
 	else \
-		printf "✓ $(1) already exists, skipping.\n"; \
+		echo $(GREEN)"✓ $(1) already exists, skipping."$(RES); \
 	fi
 endef
 
@@ -153,16 +153,22 @@ volumes:
 # ══════════════════════════════════════════════════════
 setup:
 	$(ensure_directories)
-	@echo $(CYAN)"Setting up environment files..."$(RES); \
+	@echo $(CYAN)"Setting up environment files and secrets..."$(RES); \
 	if [ ! -f srcs/.env ]; then \
 		cp srcs/.env.example srcs/.env; \
-		printf $(GREEN)"✓ Created srcs/.env from template"$(RES); \
-		printf $(ORANGE)"⚠ Please edit srcs/.env before starting!"$(RES); \
+		echo $(GREEN)"✓ Created srcs/.env from template"$(RES); \
+		echo $(ORANGE)"⚠ Please edit srcs/.env before starting!\n"$(RES); \
 	else \
-		echo "✓ srcs/.env already exists"; \
+		echo $(GREEN)"✓ srcs/.env already exists"$(RES); \
 	fi;
 	$(call ask_password,$(S_DB_ROOT),Please define MariaDB root password: )
 	$(call ask_password,$(S_DB),Please define WordPress DB user password: )
-# 	$(call ask_credentials,$(S_CREDENTIALS))
+	$(call ask_credentials,$(S_CREDENTIALS))
+
+	@if [ ! $(diff srcs/.env srcs/.env.example) ]; then \
+		echo $(ORANGE)"It appears your .env file is a copy of .env.example\nPlease modify it before proceeding."$(RES); \
+	else \
+		echo $(GREEN)"ALL GOOD! run make up to get started!"$(RES); \
+	fi;
 
 .PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup
