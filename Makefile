@@ -74,6 +74,7 @@ define ask_credentials
 			echo "$$user:$$pwd" > $(1); \
 			chmod 600 $(1); \
 			printf $(GREEN)"✓ Credentials saved!\n"$(RES); \
+			printf $(ORANGE)"⚠ Don't forget to set WP_ADMIN_USER in the .env file, so it matches the username you just defined!\n"$(RES); \
 			break; \
 		done; \
 	else \
