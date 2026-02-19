@@ -17,7 +17,8 @@ services:
       - mariadb-data:/var/lib/mysql
     healthcheck:
       # test: ["CMD-SHELL", "mysqladmin -u health -psecretphrase ping --silent"]
-      test: ["CMD-SHELL", "mysqladmin ping --socket=/run/mysqld/mysql.sock --silent"]
+      test: ["CMD-SHELL", "mysqladmin --defaults-extra-file=/etc/mysql/health.cnf ping --silent"]
+      # test: ["CMD-SHELL", "mysqladmin ping --socket=/run/mysqld/mysql.sock --silent"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -48,12 +49,14 @@ services:
         condition: service_healthy
     environment:
       - DOMAIN_NAME="${LOGIN}.42.fr"
-      - WP_PAGE_TITLE=${WP_PAGE_TITLE}
+      - WP_TITLE=${WP_PAGE_TITLE}
       - WP_ADMIN_USER_ENV=${WP_ADMIN_USER_ENV}
       - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
       - WP_USER=${WP_USER}
       - WP_USER_EMAIL=${WP_USER_EMAIL}
       - WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD_FILE=/run/secrets/db_user_pw
     secrets:
       - db_user_pw

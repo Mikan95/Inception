@@ -110,6 +110,8 @@ down:
 	@$(DC) down
 	@echo $(GREEN)"Containers stopped!"$(RES)
 
+downv:
+	@$(DC) down -v
 # Full rebuild from scratch (no cache)
 rebuild:
 	@echo $(ORANGE)"Rebuilding from zero (no cache)..."$(RES)

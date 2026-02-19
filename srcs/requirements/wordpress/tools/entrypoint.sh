@@ -41,18 +41,21 @@ if ! wp core is-installed --allow-root 2>/dev/null; then
     echo ">>> First run: Setting up WordPress..."
 
     # Download WordPress core (if not already downloaded)
-    if [ ! -f wp-config.php ]; then
+    if [ ! -d wp-admin ]; then
+		echo ">>> Downloading Wordpress core.."
         wp core download --allow-root
     fi
 
 	# ── Create wp-config.php ─────────────────────────────────────────────────────────────────
     # Connects Wordpress to Database
+	if [ ! -f wp-config.php ]; then
     wp config create \
         --dbname=${MYSQL_DATABASE} \
         --dbuser=${MYSQL_USER} \
         --dbpass=${DB_PASSWORD} \
         --dbhost=mariadb:3306 \
         --allow-root
+	fi
 
 	# ── Install WordPress ────────────────────────────────────────────────────────────────────
     # Creates admin user, sets up site, etc.

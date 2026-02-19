@@ -4,7 +4,8 @@ FROM alpine:3.22
 RUN apk update && apk add --no-cache \
 	php83 php83-fpm php83-mysqli php83-json php83-curl php83-dom \
 	php83-exif php83-fileinfo php83-mbstring php83-openssl php83-xml \
-	php83-zip php83-gd php83-phar curl tar wget
+	php83-zip php83-gd php83-phar curl tar wget \
+	&& echo "memory_limit = 512M" > /etc/php83/conf.d/99-memory.ini
 
 
 

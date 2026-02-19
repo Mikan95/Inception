@@ -27,12 +27,8 @@ if [ ! -d "$DATADIR/mysql" ]; then
 						--skip-test-db > /dev/null \
 						--auth-root-authentication-method=normal >/dev/null
 
-	# ── Create Helathcheck config with root credentials ──────────────────────
 	# {
-	# echo "[client]"
-	# echo "user=root"
-	# echo "password=${MYSQL_ROOT_PASSWORD}"
-	# } > /etc/mysql/healthcheck.cnf
+
 	# chmod 600 /etc/mysql/healthcheck.cnf
 
 	# ── Create Bootstrap file for temp first time setup ──────────────────────
@@ -58,9 +54,6 @@ if [ ! -d "$DATADIR/mysql" ]; then
 		echo "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';"
 		echo "FLUSH PRIVILEGES;"
 
-		# # ── Create dedicated user for healthcheck ──────────────────────
-		echo "CREATE USER 'health'@'%' IDENTIFIED BY 'secretphrase';"
-		echo "GRANT USAGE ON *.* TO 'health'@'%';"
 	} > "$BOOTSTRAP_SQL"
 
 	# Run bootstrap SQL with server in bootstrap mode (no auth)
@@ -69,6 +62,12 @@ if [ ! -d "$DATADIR/mysql" ]; then
 
 	echo ">>> MariaDB setup complete!"
 fi
+
+# ── Create Helathcheck config with root credentials ──────────────────────
+	echo "[client]" > /etc/mysql/health.cnf
+	echo "user=root" >> /etc/mysql/health.cnf
+	echo "password=${DB_ROOT_PASSWORD}" >> /etc/mysql/health.cnf
+	chmod 600 /etc/mysql/health.cnf
 
 # ── Hand off to the actual daemon (PID 1) ─────────────────────────────────────
 # exec replaces this shell process with mysqld
