@@ -38,12 +38,14 @@ services:
       - wp-data:/var/www/html/wp-content
     environment:
       - WP_PAGE_TITLE=${WP_PAGE_TITLE}
-      - WP_ADMIN_USER=${WP_ADMIN_USER}
+      - WP_ADMIN_USER_ENV=${WP_ADMIN_USER_ENV}
       - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
       - WP_USER=${WP_USER}
       - WP_USER_EMAIL=${WP_USER_EMAIL}
       - WP_ADMIN_PW_FILE=/run/secrets/credentials
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_user_pw
     secrets:
+      - db_password
       - credentials
     restart: unless-stopped
 

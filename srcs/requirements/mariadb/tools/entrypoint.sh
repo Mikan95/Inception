@@ -34,18 +34,18 @@ if [ ! -d "$DATADIR/mysql" ]; then
 
 		# Set root password (only if provided)
 		if [ -n "$DB_ROOT_PASSWORD" ]; then
-		echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';"
+			echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';"
 		fi
 
 		# Create app database and user (idempotent)
 		echo "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
 		if [ -n "$DB_PASSWORD" ]; then
-		echo "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
-		echo "ALTER USER '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
+			echo "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
+			echo "ALTER USER '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
 		else
-		# Fallback password only if none provided (dev convenience)
-		echo "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY 'password';"
-		echo "ALTER USER '${DB_USER}'@'%' IDENTIFIED BY 'password';"
+			# Fallback password only if none provided (dev convenience)
+			echo "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY 'password';"
+			echo "ALTER USER '${DB_USER}'@'%' IDENTIFIED BY 'password';"
 		fi
 		echo "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';"
 		echo "FLUSH PRIVILEGES;"

@@ -1,27 +1,20 @@
 #!/bin/sh
+set -eu
 
-# Immediate exit if a command fails
-set -e
-
-
-if [ ! wp core is-installed --alow-root 2>/dev/null ]; then
-	echo ">>> Installing Wordpress..."
-
-	wp core install
-
-fi
-
-#!/bin/sh
-set -e
-
-# ── Read All Relevant WP info form Secrets ───────────────────────────────────────────────────
-DB_PASSWORD=$(cat /run/secrets/db_user_pw)
+# ── Read All Relevant WP info from Secrets ───────────────────────────────────────────────────
+DB_PASSWORD=$(cat ${MYSQL_PASSWORD_FILE})
 
 # Parse WordPress admin - Format in file: "username:password"
-SECRET_WP_ADMIN_USER=$(cat /run/secrets/credentials | cut -d: -f1)
-WP_ADMIN_PASS=$(cat /run/secrets/credentials | cut -d: -f2)
+WP_ADMIN_USER=$(cat ${WP_ADMIN_PASSWORD_FILE} | cut -d: -f1)
+WP_ADMIN_PASS=$(cat ${WP_ADMIN_PASSWORD_FILE} | cut -d: -f2)
 
-# WP_USER_PASS=$(cat /run/secrets/wp_user_pw)
+if [ "$WP_ADMIN_USER" != "$WP_ADMIN_USER_ENV" ]; then
+    echo "Error: WP_ADMIN_USER_ENV must match the saved credentials in secrets!"
+    exit 1
+else
+    echo "WP_ADMIN_USER matches!"
+fi
+
 
 # ── Wait for MariaDB to be ready ─────────────────────────────────────────────────────────────
 echo ">>> Waiting for MariaDB..."
@@ -71,7 +64,7 @@ if ! wp core is-installed --allow-root 2>/dev/null; then
         ${WP_USER} \
         ${WP_USER_EMAIL} \
         --role=author \
-        --user_pass=${WP_USER_PASS} \
+        --user_pass=password \
         --allow-root
 
     echo ">>> WordPress installation complete!"
