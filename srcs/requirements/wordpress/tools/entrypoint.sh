@@ -18,7 +18,7 @@ set -e
 DB_PASSWORD=$(cat /run/secrets/db_user_pw)
 
 # Parse WordPress admin - Format in file: "username:password"
-WP_ADMIN_USER=$(cat /run/secrets/credentials | cut -d: -f1)
+SECRET_WP_ADMIN_USER=$(cat /run/secrets/credentials | cut -d: -f1)
 WP_ADMIN_PASS=$(cat /run/secrets/credentials | cut -d: -f2)
 
 # WP_USER_PASS=$(cat /run/secrets/wp_user_pw)

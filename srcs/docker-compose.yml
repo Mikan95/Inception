@@ -4,6 +4,7 @@
 #		            SERVICES    		        #
 #########################################
 services:
+# ── MARIADB ───────────────────────────────────────────────────
   mariadb:
     build:
       context: ./requirements/mariadb/
@@ -24,6 +25,27 @@ services:
       - db_user_pw
     restart: unless-stopped
 
+# ── WORDPRESS ───────────────────────────────────────────────────
+  wordpress:
+    build:
+      context: ./requirements/wordpress/
+      dockerfile: Dockerfile
+    container_name: wordpress
+    image: wordpress
+    networks:
+      - db-wp
+    volumes:
+      - wp-data:/var/www/html/wp-content
+    environment:
+      - WP_PAGE_TITLE=${WP_PAGE_TITLE}
+      - WP_ADMIN_USER=${WP_ADMIN_USER}
+      - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
+      - WP_USER=${WP_USER}
+      - WP_USER_EMAIL=${WP_USER_EMAIL}
+      - WP_ADMIN_PW_FILE=/run/secrets/credentials
+    secrets:
+      - credentials
+    restart: unless-stopped
 
 #########################################
 #              VOLUMES                  #
@@ -54,3 +76,6 @@ secrets:
 
   db_user_pw:
     file: ../secrets/db_password.txt
+
+  credentials:
+    file: ../secrets/credentials.txt
