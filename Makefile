@@ -87,7 +87,7 @@ endef
 # ══════════════════════════════════════════════════════
 
 # Build all images (runs setup first to ensure secrets/dirs exist)
-all:
+all: setup
 	@echo $(GOLD)"Building Docker Images..."$(RES)
 	@$(DC) build
 	@echo $(GREEN)"Build Successful!"$(RES)

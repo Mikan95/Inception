@@ -15,6 +15,12 @@ services:
       -  db-wp
     volumes:
       - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -u root --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
@@ -35,17 +41,20 @@ services:
     networks:
       - db-wp
     volumes:
-      - wp-data:/var/www/html/wp-content
+      - wp-data:/var/www/html
+    depends_on:
+      mariadb:
+        condition: service_healthy
     environment:
       - WP_PAGE_TITLE=${WP_PAGE_TITLE}
       - WP_ADMIN_USER_ENV=${WP_ADMIN_USER_ENV}
       - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
       - WP_USER=${WP_USER}
       - WP_USER_EMAIL=${WP_USER_EMAIL}
-      - WP_ADMIN_PW_FILE=/run/secrets/credentials
+      - WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
       - MYSQL_PASSWORD_FILE=/run/secrets/db_user_pw
     secrets:
-      - db_password
+      - db_user_pw
       - credentials
     restart: unless-stopped
 
@@ -54,12 +63,17 @@ services:
 #########################################
 volumes:
   mariadb-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/ameechan/data/mariadb
-
+      driver: local
+      driver_opts:
+        type: none
+        o: bind
+        device: /home/ameechan/data/mariadb
+  wp-data:
+      driver: local
+      driver_opts:
+        type: none
+        o: bind
+        device: /home/ameechan/data/wordpress
 
 #########################################
 #              NETWORKS                 #

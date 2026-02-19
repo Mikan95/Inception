@@ -14,8 +14,9 @@ if [ "$WP_ADMIN_USER" != "$WP_ADMIN_USER_ENV" ]; then
 lower_user=$(printf "%s" "${WP_ADMIN_USER}" | tr '[:upper]' '[:lower]');
 case "$lower_user" in
 	*admin*)
-		echo "Error: Username cannot contain 'admin' (case-insensitive)!\n"; \
-		exit 1
+		echo "Error: Username cannot contain 'admin' (case-insensitive)!\n";
+		exit 1 ;;
+esac;
 else
     echo "WP_ADMIN_USER matches and is valid!"
 fi
