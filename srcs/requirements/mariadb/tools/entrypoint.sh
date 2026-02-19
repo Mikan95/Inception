@@ -8,7 +8,7 @@ DATADIR="/var/lib/mysql"                # MariaDB data directory path
 SOCKET="/run/mysqld/mysql.sock"        # Local socket path
 
 
-# ── Read secrets ──────────────────────────────────────────────────────────────
+# ── Read secrets ─────────────────────────────────────────────────────────────
 DB_NAME="${MYSQL_DATABASE:-wordpress}"	# If not set, default to "wordpress"
 DB_USER="${MYSQL_USER:-wp_user}"		# If not set, default to "wp_user"
 DB_ROOT_PASSWORD=$(cat $MYSQL_ROOT_PASSWORD_FILE)
@@ -27,7 +27,15 @@ if [ ! -d "$DATADIR/mysql" ]; then
 						--skip-test-db > /dev/null \
 						--auth-root-authentication-method=normal >/dev/null
 
+	# ── Create Helathcheck config with root credentials ──────────────────────
+	# {
+	# echo "[client]"
+	# echo "user=root"
+	# echo "password=${MYSQL_ROOT_PASSWORD}"
+	# } > /etc/mysql/healthcheck.cnf
+	# chmod 600 /etc/mysql/healthcheck.cnf
 
+	# ── Create Bootstrap file for temp first time setup ──────────────────────
 	BOOTSTRAP_SQL="/tmp/bootstrap.sql"
 	{
 		echo "FLUSH PRIVILEGES;"
@@ -49,6 +57,10 @@ if [ ! -d "$DATADIR/mysql" ]; then
 		fi
 		echo "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';"
 		echo "FLUSH PRIVILEGES;"
+
+		# # ── Create dedicated user for healthcheck ──────────────────────
+		echo "CREATE USER 'health'@'%' IDENTIFIED BY 'secretphrase';"
+		echo "GRANT USAGE ON *.* TO 'health'@'%';"
 	} > "$BOOTSTRAP_SQL"
 
 	# Run bootstrap SQL with server in bootstrap mode (no auth)

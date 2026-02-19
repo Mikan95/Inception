@@ -16,7 +16,8 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -u root --silent"]
+      # test: ["CMD-SHELL", "mysqladmin -u health -psecretphrase ping --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping --socket=/run/mysqld/mysql.sock --silent"]
       interval: 5s
       timeout: 3s
       retries: 5
