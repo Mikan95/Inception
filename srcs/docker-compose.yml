@@ -46,6 +46,7 @@ services:
       mariadb:
         condition: service_healthy
     environment:
+      - DOMAIN_NAME="${LOGIN}.42.fr"
       - WP_PAGE_TITLE=${WP_PAGE_TITLE}
       - WP_ADMIN_USER_ENV=${WP_ADMIN_USER_ENV}
       - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
@@ -67,13 +68,13 @@ volumes:
       driver_opts:
         type: none
         o: bind
-        device: /home/ameechan/data/mariadb
+        device: /home/${LOGIN}/data/mariadb
   wp-data:
       driver: local
       driver_opts:
         type: none
         o: bind
-        device: /home/ameechan/data/wordpress
+        device: /home/${LOGIN}/data/wordpress
 
 #########################################
 #              NETWORKS                 #
