@@ -61,6 +61,12 @@ define ask_credentials
 			if [ -z "$$user" ]; then \
 				printf "Username cannot be empty!\n"; continue; \
 			fi; \
+			lower_user=$$(printf "%s" "$$user" | tr '[:upper:]' '[:lower:]'); \
+			case "$$lower_user" in \
+				*admin*) \
+					echo $(RED)"Username cannot contain 'admin' (case-insensitive)!\n"$(RES); \
+					continue ;; \
+			esac; \
 			read -p "Enter WordPress admin password: " pwd; \
 			if [ $${#pwd} -lt 4 ] || [ $${#pwd} -gt 20 ]; then \
 				printf "Password must be 4-20 characters!\n"; continue; \
