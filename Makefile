@@ -25,6 +25,8 @@ S_DB				= secrets/db_password.txt
 S_CREDENTIALS		= secrets/credentials.txt
 SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
 
+ENV_FILE			= srcs/.env
+
 # ══════════════════════════════════════════════════════
 #                   HELPER MACROS
 # ══════════════════════════════════════════════════════
@@ -82,24 +84,45 @@ define ask_credentials
 	fi
 endef
 
+
+define validate_admin
+	@echo $(CYAN)"Validating WordPress admin username..."$(RES)
+	@WP_ADMIN_USER=$$(cut -d: -f1 secrets/credentials.txt); \
+	WP_ADMIN_USER_ENV=$$(grep WP_ADMIN_USER $(ENV_FILE) | cut -d= -f2); \
+	LOWER_USER=$$(printf "%s" "$$WP_ADMIN_USER" | tr '[:upper]' '[:lower]'); \
+	if [ "$$WP_ADMIN_USER" != "$$WP_ADMIN_USER_ENV" ]; then \
+		echo $(RED)"Error: WP_ADMIN_USER in $(ENV_FILE) does not match credentials.txt"$(RES); \
+		exit 1; \
+	fi; \
+	case "$$LOWER_USER" in \
+		*admin*) \
+			echo $(RED)"Error: Username cannot contain 'admin' (case-insensitive)!"$(RES); \
+			exit 1 ;; \
+	esac; \
+	echo $(GREEN)"✓ Username validation passed."$(RES)
+endef
+
 # ══════════════════════════════════════════════════════
 #                   MAIN TARGETS
 # ══════════════════════════════════════════════════════
 
 # Build all images (runs setup first to ensure secrets/dirs exist)
 all: setup
+	$(validate_admin)
 	@echo $(GOLD)"Building Docker Images..."$(RES)
 	@$(DC) build
 	@echo $(GREEN)"Build Successful!"$(RES)
 
 # Start containers in detached mode
 up:
+	$(validate_admin)
 	@echo $(YELLOW)"Starting containers..."$(RES)
 	@$(DC) up -d
 	@echo $(GREEN)"Containers started!"$(RES)
 
 # Start containers in detached mode
 up-build:
+	$(validate_admin)
 	@echo $(YELLOW)"Starting containers..."$(RES)
 	@$(DC) up -d --build
 	@echo $(GREEN)"Containers started!"$(RES)
@@ -114,6 +137,7 @@ downv:
 	@$(DC) down -v
 # Full rebuild from scratch (no cache)
 rebuild:
+	$(validate_admin)
 	@echo $(ORANGE)"Rebuilding from zero (no cache)..."$(RES)
 	@$(DC) build --no-cache
 	@echo $(GREEN)"Rebuild Successful!"$(RES)

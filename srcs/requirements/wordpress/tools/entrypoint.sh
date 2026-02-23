@@ -11,6 +11,7 @@ WP_ADMIN_PASS=$(cat ${WP_ADMIN_PASSWORD_FILE} | cut -d: -f2)
 if [ "$WP_ADMIN_USER" != "$WP_ADMIN_USER_ENV" ]; then
     echo "Error: WP_ADMIN_USER_ENV must match the saved credentials in secrets!"
     exit 1
+fi
 lower_user=$(printf "%s" "${WP_ADMIN_USER}" | tr '[:upper]' '[:lower]');
 case "$lower_user" in
 	*admin*)
