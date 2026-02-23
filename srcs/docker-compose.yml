@@ -12,7 +12,7 @@ services:
     container_name: mariadb
     image: mariadb
     networks:
-      -  db-wp
+      -  docker-network
     volumes:
       - mariadb-data:/var/lib/mysql
     healthcheck:
@@ -33,7 +33,7 @@ services:
       - db_user_pw
     restart: unless-stopped
 
-# ── WORDPRESS ───────────────────────────────────────────────────
+# ── WORDPRESS ──────
   wordpress:
     build:
       context: ./requirements/wordpress/
@@ -41,7 +41,7 @@ services:
     container_name: wordpress
     image: wordpress
     networks:
-      - db-wp
+      - docker-network
     volumes:
       - wp-data:/var/www/html
     depends_on:
@@ -62,6 +62,20 @@ services:
       - db_user_pw
       - credentials
     restart: unless-stopped
+
+# ── NGINX ───────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: ./requirements/nginx/
+      dockerfile: Dockerfile
+    container_name: nginx
+    image: nginx
+    networks:
+      - docker-network
+    environment:
+      - DOMAIN_NAME="${LOGIN}.42"
+    restart: unless-stopped
+
 
 #########################################
 #              VOLUMES                  #
@@ -84,7 +98,7 @@ volumes:
 #              NETWORKS                 #
 #########################################
 networks:
-  db-wp:
+  docker-network:
     driver: bridge
 
 
