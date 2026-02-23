@@ -76,11 +76,13 @@ services:
       - type: volume
         source: wp-data
         target: /var/www/html
-        read-only: true
+        read_only: true
     ports:
       - "443:443"
     environment:
-      - DOMAIN_NAME="${LOGIN}.42"
+      - DOMAIN_NAME="${LOGIN}.42.fr"
+      - SSL_CERT=${SSL_CERT}
+      - SSL_KEY=${SSL_KEY}
     depends_on:
       - wordpress
     restart: unless-stopped
