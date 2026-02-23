@@ -1,6 +1,63 @@
+#── GLOBAL CONTEXT ────────────────────────────────────────────────────────────
+user nginx;
+worker_processes auto;						# one worker process per CPU core
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+#── CONNECTION HANDLING ───────────────────────────────────────────────────────
+events {
+    worker_connections 1024;				# Max connections per worker
+}
+
+#── MAIN CONFIGURATION ────────────────────────────────────────────────────────
 http {
-	server {
-		listen 443 ssl;
-		server_name $DOMAIN_NAME;
-	}
+	#── MIME handling ─────────────────────────────────────
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;	# Default to Binary
+
+	#── Define Output Location of Logs ────────────────────
+    access_log /dev/stdout;					# Print access logs to stdout
+	error_log /dev/stderr;					# Print error logs to stderr
+
+	#── WEBSITE CONFIG ────────────────────────────────────────────────────────
+    server {
+		#── Port and Domain Name ──────────────────────────
+        listen 443 ssl;
+        listen [::]:443 ssl;  				# IPv6 support
+        server_name ${DOMAIN_NAME};
+
+		#── SSL Certificates & Protocol ───────────────────
+        ssl_certificate ${SSL_CERT};
+        ssl_certificate_key ${SSL_KEY};
+        ssl_protocols TLSv1.2 TLSv1.3;
+
+        ssl_ciphers HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+
+		#── Filesystem Routing ────────────────────────────
+        root /var/www/html;
+        index index.php index.html index.htm;
+        location / {
+			# 1. try file $uri
+			# 2. try directory $uri/
+			# 3. send to index.php
+            try_files $uri $uri/ /index.php?$args;
+        }
+
+		#── PHP Fast CGI ──────────────────────────────────────────────────────
+        location ~ \.php$ {					# maps .php files to this location
+            try_files $uri =404;			# Return 404 if non-existing php file
+			fastcgi_index index.php;
+
+			#── Forward Processing to PHP Container ───────
+            fastcgi_pass wordpress:9000;
+            include fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+
+		#── Deny Access to Hidden Files ───────────────────────────────────────
+        location ~ /\. {
+            deny all;
+        }
+    }
 }
