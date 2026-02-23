@@ -16,7 +16,7 @@ http {
 
 	#── Define Output Location of Logs ────────────────────
     access_log /dev/stdout;					# Print access logs to stdout
-	error_log /dev/stderr warn;					# Print error logs to stderr
+	error_log /dev/stderr warn;				# Print error logs to stderr
 
 	#── WEBSITE CONFIG ────────────────────────────────────────────────────────
     server {
@@ -29,9 +29,6 @@ http {
         ssl_certificate ${SSL_CERT};
         ssl_certificate_key ${SSL_KEY};
         ssl_protocols TLSv1.2 TLSv1.3;
-
-        ssl_ciphers HIGH:!aNULL:!MD5;
-        ssl_prefer_server_ciphers on;
 
 		#── Filesystem Routing ────────────────────────────
         root /var/www/html;
