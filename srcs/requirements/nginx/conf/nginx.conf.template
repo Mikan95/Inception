@@ -1,7 +1,6 @@
 #── GLOBAL CONTEXT ────────────────────────────────────────────────────────────
 user nginx;
 worker_processes auto;						# one worker process per CPU core
-error_log /var/log/nginx/error.log warn;
 pid /var/run/nginx.pid;
 
 #── CONNECTION HANDLING ───────────────────────────────────────────────────────
@@ -17,7 +16,7 @@ http {
 
 	#── Define Output Location of Logs ────────────────────
     access_log /dev/stdout;					# Print access logs to stdout
-	error_log /dev/stderr;					# Print error logs to stderr
+	error_log /dev/stderr warn;					# Print error logs to stderr
 
 	#── WEBSITE CONFIG ────────────────────────────────────────────────────────
     server {
