@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -eu
 
 # SSL certificate paths
 CERT_PATH="/etc/nginx/ssl/nginx.crt"
