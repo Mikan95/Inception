@@ -51,7 +51,7 @@ define ask_password
 			fi; \
 		done; \
 	else \
-		echo $(GREEN)"✓ $(1) already exists, skipping."$(RES); \
+		echo $(GREEN)"✓"$(YELLOW)" $(1)"$(GREEN)" already exists, skipping."$(RES); \
 	fi
 endef
 
@@ -80,18 +80,19 @@ define ask_credentials
 			break; \
 		done; \
 	else \
-		echo $(GREEN)"✓ $(1) already exists, skipping."$(RES); \
+		echo $(GREEN)"✓"$(YELLOW)" $(1)"$(GREEN)" already exists, skipping."$(RES); \
 	fi
 endef
 
 
 define validate_admin
-	@echo $(CYAN)"Validating WordPress admin username..."$(RES)
+	@echo $(CYAN)"<Validating WordPress admin username>"$(RES)
 	@WP_ADMIN_USER=$$(cut -d: -f1 secrets/credentials.txt); \
-	WP_ADMIN_USER_ENV=$$(grep WP_ADMIN_USER $(ENV_FILE) | cut -d= -f2); \
+	WP_ADMIN_USER_ENV=$$(grep WP_ADMIN_USER_ENV= $(ENV_FILE) | cut -d= -f2); \
 	LOWER_USER=$$(printf "%s" "$$WP_ADMIN_USER" | tr '[:upper]' '[:lower]'); \
 	if [ "$$WP_ADMIN_USER" != "$$WP_ADMIN_USER_ENV" ]; then \
-		echo $(RED)"Error: WP_ADMIN_USER in $(ENV_FILE) does not match credentials.txt"$(RES); \
+		echo $(RED)"Error: WP_ADMIN_USER_ENV in $(ENV_FILE) does not match credentials.txt"$(RES); \
+		echo $(CYAN)"$(ENV_FILE):"$(RES)"   $$WP_ADMIN_USER_ENV\n"$(CYAN)"credentials: "$(RES)"$$WP_ADMIN_USER"; \
 		exit 1; \
 	fi; \
 	case "$$LOWER_USER" in \
@@ -99,7 +100,17 @@ define validate_admin
 			echo $(RED)"Error: Username cannot contain 'admin' (case-insensitive)!"$(RES); \
 			exit 1 ;; \
 	esac; \
-	echo $(GREEN)"✓ Username validation passed."$(RES)
+	echo $(GREEN)"✓ Admin Username validation passed."$(RES)
+endef
+
+
+define check_env_file
+	@if diff -q srcs/.env srcs/.env.example > /dev/null; then \
+		echo $(ORANGE)"It appears your .env file is a copy of .env.example\nPlease modify it before proceeding."$(RES); \
+		exit 1; \
+	else \
+		echo $(GREEN)"✓ .env is different from .env.example"$(RES); \
+	fi
 endef
 
 # ══════════════════════════════════════════════════════
@@ -108,28 +119,31 @@ endef
 
 # Build all images (runs setup first to ensure secrets/dirs exist)
 all: setup
+	$(check_env_file)
 	$(validate_admin)
-	@echo $(GOLD)"Building Docker Images..."$(RES)
+	@echo $(GOLD)"<Building Docker Images>"$(RES)
 	@$(DC) build
 	@echo $(GREEN)"Build Successful!"$(RES)
 
 # Start containers in detached mode
 up:
+	$(check_env_file)
 	$(validate_admin)
-	@echo $(YELLOW)"Starting containers..."$(RES)
+	@echo $(YELLOW)"<Starting containers>"$(RES)
 	@$(DC) up -d
 	@echo $(GREEN)"Containers started!"$(RES)
 
 # Start containers in detached mode
 up-build:
+	$(check_env_file)
 	$(validate_admin)
-	@echo $(YELLOW)"Starting containers..."$(RES)
+	@echo $(YELLOW)"<Starting containers>"$(RES)
 	@$(DC) up -d --build
 	@echo $(GREEN)"Containers started!"$(RES)
 
 # Stop containers (keeps volumes and images)
 down:
-	@echo $(RED)"Stopping containers..."$(RES)
+	@echo $(RED)"<Stopping containers>"$(RES)
 	@$(DC) down
 	@echo $(GREEN)"Containers stopped!"$(RES)
 
@@ -137,8 +151,9 @@ downv:
 	@$(DC) down -v
 # Full rebuild from scratch (no cache)
 rebuild:
+	$(check_env_file)
 	$(validate_admin)
-	@echo $(ORANGE)"Rebuilding from zero (no cache)..."$(RES)
+	@echo $(ORANGE)"<Rebuilding from zero (no cache)>"$(RES)
 	@$(DC) build --no-cache
 	@echo $(GREEN)"Rebuild Successful!"$(RES)
 
@@ -148,7 +163,7 @@ rebuild:
 
 # Remove secrets and .env only (keeps containers/images/volumes)
 clean:
-	@echo $(ORANGE)"Cleaning secrets and environment..."$(RES)
+	@echo $(ORANGE)"<Cleaning secrets and environment>"$(RES)
 	@rm -rf $(SECRET_FILES)
 	@rm -rf srcs/.env
 	@echo $(CYAN)"Secrets and .env removed!"$(RES)
@@ -156,7 +171,7 @@ clean:
 # Remove EVERYTHING: containers, images, volumes, data, secrets
 # Order matters! Docker must read .env BEFORE we delete it
 fclean:
-	@echo $(RED)"Removing everything..."$(RES)
+	@echo $(RED)"<Removing everything>"$(RES)
 	@$(DC) down --rmi all -v 2>/dev/null || true
 	@sudo rm -rf $(DB_DIR) $(WP_DIR)
 	@$(MAKE) --no-print-directory clean
@@ -186,22 +201,16 @@ volumes:
 # ══════════════════════════════════════════════════════
 setup:
 	$(ensure_directories)
-	@echo $(CYAN)"Setting up environment files and secrets..."$(RES); \
+	@echo $(CYAN)"<Setting up environment files and secrets>"$(RES); \
 	if [ ! -f srcs/.env ]; then \
 		cp srcs/.env.example srcs/.env; \
 		echo $(GREEN)"✓ Created srcs/.env from template"$(RES); \
 		echo $(ORANGE)"⚠ Please edit srcs/.env before starting!\n"$(RES); \
 	else \
-		echo $(GREEN)"✓ srcs/.env already exists"$(RES); \
+		echo $(GREEN)"✓"$(YELLOW)" srcs/.env"$(GREEN)" already exists, skipping."$(RES); \
 	fi;
 	$(call ask_password,$(S_DB_ROOT),Please define MariaDB root password: )
 	$(call ask_password,$(S_DB),Please define WordPress DB user password: )
 	$(call ask_credentials,$(S_CREDENTIALS))
-
-	@if [ ! $(diff srcs/.env srcs/.env.example) ]; then \
-		echo $(ORANGE)"It appears your .env file is a copy of .env.example\nPlease modify it before proceeding."$(RES); \
-	else \
-		echo $(GREEN)"ALL GOOD! run make up to get started!"$(RES); \
-	fi;
 
 .PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup
