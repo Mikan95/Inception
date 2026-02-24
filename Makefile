@@ -148,7 +148,9 @@ down:
 	@echo $(GREEN)"Containers stopped!"$(RES)
 
 downv:
+#	Remove volumes (permanent data)
 	@$(DC) down -v
+
 # Full rebuild from scratch (no cache)
 rebuild:
 	$(check_env_file)
