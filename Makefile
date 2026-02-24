@@ -126,15 +126,15 @@ all: setup
 	@echo $(GREEN)"Build Successful!"$(RES)
 
 # Start containers in detached mode
-up:
+up: setup
 	$(check_env_file)
 	$(validate_admin)
 	@echo $(YELLOW)"<Starting containers>"$(RES)
-	@$(DC) up -d
+	@$(DC) up -d --pull never
 	@echo $(GREEN)"Containers started!"$(RES)
 
 # Start containers in detached mode
-up-build:
+up-build: setup
 	$(check_env_file)
 	$(validate_admin)
 	@echo $(YELLOW)"<Starting containers>"$(RES)
