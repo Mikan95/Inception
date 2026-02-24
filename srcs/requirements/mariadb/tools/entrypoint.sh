@@ -4,8 +4,11 @@
 set -e
 
 
-DATADIR="/var/lib/mysql"                # MariaDB data directory path
 SOCKET="/run/mysqld/mysql.sock"        # Local socket path
+
+# ── Ensure Data Directory Permissions ────────────────────────────────────────
+DATADIR="/var/lib/mysql"                # MariaDB data directory path
+chown -R mysql:mysql /var/lib/mysql
 
 
 # ── Read secrets ─────────────────────────────────────────────────────────────
@@ -29,7 +32,6 @@ if [ ! -d "$DATADIR/mysql" ]; then
 
 	# {
 
-	# chmod 600 /etc/mysql/healthcheck.cnf
 
 	# ── Create Bootstrap file for temp first time setup ──────────────────────
 	BOOTSTRAP_SQL="/tmp/bootstrap.sql"
