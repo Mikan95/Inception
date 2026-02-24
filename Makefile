@@ -163,7 +163,7 @@ rebuild:
 #                  CLEANUP TARGETS
 # ══════════════════════════════════════════════════════
 
-# Remove secrets and .env only (keeps containers/images/volumes)
+# Remove secrets and .env only
 clean:
 	@echo $(ORANGE)"<Cleaning secrets and environment>"$(RES)
 	@rm -rf $(SECRET_FILES)
@@ -180,7 +180,20 @@ fclean:
 	@echo $(GREEN)"Everything removed!"$(RES)
 
 # Full clean then rebuild
-re: fclean all
+re: nuke all
+
+nuke:
+	@echo $(CYAN)"<Stopping all containers>"$(RES)
+	-@docker stop $$(docker ps -qa) 2>/dev/null || true
+	@echo $(ORANGE)">> Removing all containers..."$(RES)
+	-@docker rm $$(docker ps -qa) 2>/dev/null || true
+	@echo $(ORANGE)">> Removing all images..."$(RES)
+	-@docker rmi -f $$(docker images -qa) 2>/dev/null || true
+	@echo $(ORANGE)">> Removing all volumes..."$(RES)
+	-@docker volume rm $$(docker volume ls -q) 2>/dev/null || true
+	@echo $(ORANGE)">> Removing all networks..."$(RES)
+	-@docker network rm $$(docker network ls -q) 2>/dev/null || true
+	@echo $(GREEN)"✓ Done!"$(RES)
 
 # ══════════════════════════════════════════════════════
 #                  UTILITY TARGETS
@@ -215,4 +228,4 @@ setup:
 	$(call ask_password,$(S_DB),Please define WordPress DB user password: )
 	$(call ask_credentials,$(S_CREDENTIALS))
 
-.PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup
+.PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup nuke
