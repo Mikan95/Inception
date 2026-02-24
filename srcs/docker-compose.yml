@@ -4,7 +4,7 @@
 #		            SERVICES    		        #
 #########################################
 services:
-# ── MARIADB ───────────────────────────────────────────────────
+# ── MARIADB ──────────────────────────────────────────────────────────────────
   mariadb:
     build:
       context: ./requirements/mariadb/
@@ -31,7 +31,7 @@ services:
       - db_user_pw
     restart: unless-stopped
 
-# ── WORDPRESS ──────
+# ── WORDPRESS ────────────────────────────────────────────────────────────────
   wordpress:
     build:
       context: ./requirements/wordpress/
@@ -46,22 +46,28 @@ services:
       mariadb:
         condition: service_healthy
     environment:
+      # ── Website ────────────────────────────────────────
       - DOMAIN_NAME="${LOGIN}.42.fr"
       - WP_TITLE=${WP_PAGE_TITLE}
+      # ── Admin ──────────────────────────────────────────
       - WP_ADMIN_USER_ENV=${WP_ADMIN_USER_ENV}
       - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
+      # ── Second User ────────────────────────────────────
+      - WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
       - WP_USER=${WP_USER}
       - WP_USER_EMAIL=${WP_USER_EMAIL}
-      - WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
+      - WP_USER_PASSWORD_FILE=/run/secrets/second_user
+      # ── Database ───────────────────────────────────────
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD_FILE=/run/secrets/db_user_pw
     secrets:
       - db_user_pw
       - credentials
+      - second_user
     restart: unless-stopped
 
-# ── NGINX ───────────────────────────────────────────────────────
+# ── NGINX ────────────────────────────────────────────────────────────────────
   nginx:
     build:
       context: ./requirements/nginx/
@@ -123,3 +129,6 @@ secrets:
 
   credentials:
     file: ../secrets/credentials.txt
+
+  second_user:
+    file: ../secrets/second_user.txt

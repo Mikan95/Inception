@@ -3,6 +3,7 @@ set -eu
 
 # ── Read All Relevant WP info from Secrets ───────────────────────────────────────────────────
 DB_PASSWORD=$(cat ${MYSQL_PASSWORD_FILE})
+WP_USER_PASS=$(cat ${WP_USER_PASSWORD_FILE})
 
 # Parse WordPress admin - Format in file: "username:password"
 WP_ADMIN_USER=$(cat ${WP_ADMIN_PASSWORD_FILE} | cut -d: -f1)
@@ -59,9 +60,8 @@ if ! wp core is-installed --allow-root 2>/dev/null; then
         ${WP_USER} \
         ${WP_USER_EMAIL} \
         --role=author \
-        --user_pass=password \
+        --user_pass=${WP_USER_PASS} \
         --allow-root
-
     echo ">>> WordPress installation complete!"
 
 else

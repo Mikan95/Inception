@@ -23,7 +23,8 @@ DC					= docker compose -f $(DOCKER_COMPOSE_FILE)
 S_DB_ROOT			= secrets/db_root_password.txt
 S_DB				= secrets/db_password.txt
 S_CREDENTIALS		= secrets/credentials.txt
-SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS)
+S_SECOND_USER		= secrets/second_user.txt
+SECRET_FILES		= $(S_DB_ROOT) $(S_DB) $(S_CREDENTIALS) $(S_SECOND_USER)
 
 ENV_FILE			= srcs/.env
 
@@ -168,7 +169,7 @@ clean:
 	@echo $(ORANGE)"<Cleaning secrets and environment>"$(RES)
 	@rm -rf $(SECRET_FILES)
 	@rm -rf srcs/.env
-	@echo $(CYAN)"Secrets and .env removed!"$(RES)
+	@echo $(GREEN)"✓ Secrets and .env removed!"$(RES)
 
 # Remove EVERYTHING: containers, images, volumes, data, secrets
 # Order matters! Docker must read .env BEFORE we delete it
@@ -182,7 +183,7 @@ fclean:
 # Full clean then rebuild
 re: nuke all
 
-nuke:
+nuke: clean
 	@echo $(CYAN)"<Stopping all containers>"$(RES)
 	-@docker stop $$(docker ps -qa) 2>/dev/null || true
 	@echo $(ORANGE)">> Removing all containers..."$(RES)
@@ -227,5 +228,6 @@ setup:
 	$(call ask_password,$(S_DB_ROOT),Please define MariaDB root password: )
 	$(call ask_password,$(S_DB),Please define WordPress DB user password: )
 	$(call ask_credentials,$(S_CREDENTIALS))
+	$(call ask_password,$(S_SECOND_USER),Please define second WordPress user password: )
 
 .PHONY: all up up-build down rebuild clean fclean re ps logs volumes setup nuke
