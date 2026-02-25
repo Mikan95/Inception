@@ -183,7 +183,7 @@ fclean:
 # Full clean then rebuild
 re: nuke all
 
-nuke: clean
+nuke: fclean
 	@echo $(CYAN)"<Stopping all containers>"$(RES)
 	-@docker stop $$(docker ps -qa) 2>/dev/null || true
 	@echo $(ORANGE)">> Removing all containers..."$(RES)
