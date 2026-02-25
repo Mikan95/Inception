@@ -75,7 +75,7 @@ Internet → NGINX (port 443, HTTPS) → WordPress (PHP-FPM) → MariaDB (Databa
    - Create a `.env` file from `.env.example`
    - Prompt for MariaDB root password (4-20 characters)
    - Prompt for WordPress database user password (4-20 characters)
-   - Prompt for WordPress admin credentials (username:password format)
+   - Prompt for WordPress admin credentials
    - Validate that admin username doesn't contain "admin" or "administrator"
    - Create all necessary secret files with proper permissions (600)
 
@@ -98,13 +98,18 @@ Internet → NGINX (port 443, HTTPS) → WordPress (PHP-FPM) → MariaDB (Databa
    WP_USER=regular_user              # Second user username
    WP_USER_EMAIL=user@example.com    # Second user email
    ```
+4. **Edit `LOGIN` variable in Makefile to match the login in .env:**
+   _set to_ `ameechan` _by default_
+   ```bash
+   nano Makefile
+   ```
 
-4. **Configure domain resolution:**
+5. **Configure domain resolution:**
    ```bash
    sudo nano /etc/hosts
    ```
    
-   Add this line (replace `your_login` with your actual 42 login):
+   Add this line (replace `your_login` with your actual 42 login or the login you chose in .env):
    ```
    127.0.0.1    your_login.42.fr
    ```
@@ -249,7 +254,7 @@ cat secrets/second_user.txt       # Second user password
 3. **Reconfigure:**
    ```bash
    make setup   # Enter new credentials
-   nano srcs/.env   # Update usernames if changed
+   nano srcs/.env   # Update environment variables
    ```
 
 4. **Rebuild:**
@@ -274,7 +279,7 @@ All three services should show "Up" status.
 
 **All services:**
 ```bash
-docker compose -f srcs/docker-compose.yml logs -f
+make logs
 ```
 
 **Specific service:**
@@ -352,38 +357,6 @@ For production use, you would use a real SSL certificate from Let's Encrypt or a
 
 ---
 
-## Data Persistence
-
-### Where is Data Stored?
-
-All persistent data is stored on your host machine at:
-```
-/home/your_login/data/
-├── mariadb/       # Database files
-└── wordpress/     # WordPress files, uploads, themes, plugins
-```
-
-**This means:**
-- Data survives container restarts (`make down` → `make up`)
-- Data survives container rebuilds (`make rebuild`)
-- Data is only deleted if you run `make nuke` or manually delete these directories
-
-### Backing Up Data
-
-**Quick backup (while containers are running):**
-```bash
-docker exec mariadb mysqldump -u root -p --all-databases > backup.sql
-```
-
-**Full backup (stop containers first):**
-```bash
-make down
-sudo cp -r /home/your_login/data /path/to/backup/location/
-make up
-```
-
----
-
 ## Complete Reset
 
 If you need to start completely fresh:
@@ -416,10 +389,10 @@ After `make nuke`, run `make setup` to reconfigure from scratch.
 | **Start containers** | `make up` |
 | **Stop containers** | `make down` |
 | **View status** | `make ps` |
-| **View logs** | `docker compose -f srcs/docker-compose.yml logs -f` |
+| **View logs** | `make logs` |
 | **Access admin panel** | `https://your_login.42.fr/wp-admin` |
 | **Complete reset** | `make nuke` |
-| **Database shell** | `docker exec -it mariadb mariadb -u root -p` |
+| **Database shell** | `docker exec -it mariadb <name_of_database> -u root -p` |
 | **View credentials** | `cat secrets/credentials.txt` |
 
 ---
