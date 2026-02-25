@@ -128,6 +128,7 @@ A custom bridge network is used to ensure proper isolation and service communica
 This project uses bind-mounted named volumes mapped to `/home/<login>/data/` to satisfy evaluation requirements and ensure persistent storage.
 Docker named volumes' storage location is handled by Docker, therefore we use this hybrid version to define a location where to store the Data on our host machine.  
 This acts as a backup of sorts, as even if we run a docker command to remove the volumes, data persists in `/home/<login>/data`
+
 ---
 
 ## Instructions
