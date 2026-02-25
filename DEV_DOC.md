@@ -446,26 +446,6 @@ docker network inspect srcs_docker-network
 
 ---
 
-## Subject Requirements Met
-
-- ✅ Alpine Linux (version 3.22)
-- ✅ Custom Dockerfiles (no pre-built images)
-- ✅ Three containers: NGINX, WordPress, MariaDB
-- ✅ TLSv1.2/1.3 only on NGINX
-- ✅ Docker named volumes with /home/login/data binding
-- ✅ Docker bridge network
-- ✅ Docker secrets for credentials
-- ✅ Environment variables in .env
-- ✅ Restart policy (unless-stopped)
-- ✅ NGINX port 443 only
-- ✅ Two WordPress users
-- ✅ No "admin" in admin username
-- ✅ No passwords in Dockerfiles
-- ✅ Domain: ${LOGIN}.42.fr
-- ✅ Health checks for MariaDB
-
----
-
 ## Command Reference
 
 ```bash
@@ -488,8 +468,8 @@ docker exec -it wordpress sh
 docker exec -it nginx sh
 
 # Debugging
-docker ps
-docker logs mariadb
+make ps
+make logs
 docker inspect wordpress
 docker stats
 ```
